@@ -4,6 +4,7 @@ import '../App.css';
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/database';
+import {Redirect} from "react-router-dom";
 
 class Lobby extends Component {
     currentUser;
@@ -13,6 +14,7 @@ class Lobby extends Component {
         this.unsubscribe = null;
         this.state = {
             users: [],
+            redirect: false
         };
         this.getCurrentUser();
     }
@@ -43,7 +45,7 @@ class Lobby extends Component {
 
     pushUserStatusToFireBase(status) {
         console.log('current uid', this.currentUser.uid);
-        firebase.firestore().collection('users').doc(`${this.currentUser.uid}`).set({
+        return firebase.firestore().collection('users').doc(`${this.currentUser.uid}`).update({
             status: status
         })
     }
@@ -72,6 +74,24 @@ class Lobby extends Component {
         this.unsubscribe = this.ref.onSnapshot(this.onCollectionUpdate);
     }
 
+    async signOut() {
+       await firebase.auth().signOut();
+       await this.pushUserStatusToFireBase('offline');
+       await this.setRedirect();
+    }
+
+    setRedirect = () => {
+        this.setState({
+            redirect: true
+        })
+    };
+
+    renderRedirect = () => {
+        if (this.state.redirect) {
+            return <Redirect to='/' />
+        }
+    };
+
     render() {
         return (
             <div className="container">
@@ -82,14 +102,15 @@ class Lobby extends Component {
                         </h3>
                     </div>
                     <div>
-                        <button onClick={this.props.signOut}>Sign out</button>
+                        {this.renderRedirect()}
+                        <button onClick={this.signOut}>Sign out</button>
                     </div>
                     <div>
                         <table className="table">
                             <thead>
                             <tr>
                                 <th>Nick name</th>
-                                <th>Date of birth</th>
+                                <th>Email</th>
                                 <th>Status</th>
                             </tr>
                             </thead>
@@ -98,7 +119,7 @@ class Lobby extends Component {
                                 <tr>
                                     {/*<td><Link to={`/show/${user.uid}`}>{user.status}</Link></td>*/}
                                     <td>{user.nickName}</td>
-                                    <td>{user.dob}</td>
+                                    <td>{user.email}</td>
                                     <td>{user.status}</td>
                                 </tr>
                             )}
