@@ -21,13 +21,14 @@ class App extends Component {
         <div className="App">
           <header className="App-header">
             <img src={logo} className="App-logo" alt="logo" />
-            {user
+            {
+                user
                   ? <Redirect to='/lobby'/>
                   : <p>Please sign in.</p>
             }
 
             {
-              user
+                user
                   ? <button onClick={signOut}>Sign out</button>
                   : <button onClick={signInWithGoogle}>Sign in with Google</button>
             }

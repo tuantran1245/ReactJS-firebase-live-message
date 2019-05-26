@@ -1,17 +1,51 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import 'firebase/auth';
 import '../App.css';
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
+import 'firebase/database';
 
 class Lobby extends Component {
+    currentUser;
     constructor(props) {
         super(props);
         this.ref = firebase.firestore().collection('users');
         this.unsubscribe = null;
         this.state = {
-            users: []
+            users: [],
         };
+        this.getCurrentUser();
+    }
+
+    getCurrentUser() {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                this.currentUser = user;
+                this.updateCurrentUserStatus();
+            } else {
+                console.log('unable to get current user instance');
+            }
+        });
+
+    }
+
+    updateCurrentUserStatus() {
+        firebase.database().ref(".info/connected").on(
+            "value",  (snap) => {
+                if (snap.val()) {
+                    this.pushUserStatusToFireBase('online')
+                } else {
+                    // client has lost network
+                    this.pushUserStatusToFireBase('offline')
+                }
+            });
+    }
+
+    pushUserStatusToFireBase(status) {
+        console.log('current uid', this.currentUser.uid);
+        firebase.firestore().collection('users').doc(`${this.currentUser.uid}`).set({
+            status: status
+        })
     }
 
     onCollectionUpdate = (querySnapshot) => {
@@ -46,6 +80,9 @@ class Lobby extends Component {
                         <h3>
                             Message list
                         </h3>
+                    </div>
+                    <div>
+                        <button onClick={this.props.signOut}>Sign out</button>
                     </div>
                     <div>
                         <table className="table">
