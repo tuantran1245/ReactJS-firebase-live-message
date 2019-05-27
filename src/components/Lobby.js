@@ -17,6 +17,8 @@ class Lobby extends Component {
             redirect: false
         };
         this.getCurrentUser();
+
+        this.pushUserStatusToFireBase = this.pushUserStatusToFireBase().bind(this);
     }
 
     getCurrentUser() {
